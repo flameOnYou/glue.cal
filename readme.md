@@ -105,3 +105,28 @@ def moveAverage(price, madeTime, moveDate, rangeSize):
         return 0
     return sum_price / totle
 
+```
+-   ####    交易逻辑(SMA版本)
+#### 计算出当日
+1.     OrderBase
+1.     green = sma(day,3,5)
+1.     red = sma(day,5,8)
+1.     blue = sma(day,8,13)
+ 
+    如果 abs(red - green) <= orderBase 并且 abs(red - blue) <= orderBase
+    则判定当日为一个均线粘合点  
+    当连续三个交易日出现均线粘合的时候则判断条件成立准备做单
+
+### 做单规则为:
+- 当三个交易日出现均线粘合的时候，可以得出两个价格点Max,和Min,
+- Max是这三个交易日的最高价，Min是这三日的最低价，当价格高于最高价的时候选择进场，止损设置在最低价位置,止盈放在当前价格+(Max-Min)的地方。
+- 这个时候有两种情况，第一种是直接止损，这个时候就算出场了，统计亏损
+- 第二种情况是止盈了，这个时候平半仓,然后用sma值止损，当价格波动到sma值的时候平仓出场
+- 当完成了以上步骤之后才可以继续找下一个粘合点
+python代码为quantization
+
+
+
+    
+-   ####    交易逻辑(moveAverage版本)
+将上述sma计算的地方换成moveAverage
