@@ -15,6 +15,7 @@ import logging
 import datetime
 import json
 from pymongo import MongoClient
+import sysutils
 
 # 日志配置
 logging.basicConfig(level=logging.INFO,
@@ -50,7 +51,7 @@ def insert(coreID,JsonArr):
         if table.find({"timestamp":timestamps}).count() <= 0:
             json_arry.append(val)
     if len(json_arry) > 0:
-        table.insert(json_arry)
+        table.insert_many(json_arry)
 
 """
 日期Str转时间戳
@@ -67,19 +68,39 @@ def get_timestamp(datestr):
 将文件转入mongodb
 """
 
+
+def sma(coreID,df,dateStr,n,m):
+    table = db[str(coreID)]
+    # 有
+    if table.find({"datetime": str(dateStr)}).count() > 0:
+        # 如果数据库表中有,则不计算sma值
+        return 0
+    return sysutils.sma(df,dateStr, n, m)
+
+
 def permit_to_mongo(coreid,filepath):
-    df = pd.read_csv(filepath,encoding="gbk",skiprows =1,names=["datetime","coreId","name","close","high","low","open","a","v","b","n","volume","h","j","k","l"])
+    df = pd.read_csv(filepath,encoding="gbk",skiprows =1,names=["datetime","coreId","name","close","high","low","open","before_close","Fluctuation","Chg","Turnover_rate","volume","amount","TotleMarket","CirculationMarket","volnum"])
     df = df.iloc[::-1]
     l = df.get_values()
     for i in l:
         i[1] = i[1].replace("'","")
     df = pd.DataFrame(l)
     df.rename(columns={'index': 'id'})
-    df.columns = ["datetime","coreId","name","close","high","low","open","before_close","Fluctuation","Chg","Turnover_rate","volume","amount","TotleMarket","CirculationMarket","volnum"]
+    df.columns = ["datetime", "coreId", "name", "close", "high", "low", "open", "before_close", "Fluctuation", "Chg",
+                  "Turnover_rate", "volume", "amount", "TotleMarket", "CirculationMarket", "volnum"]
+
     # axis=1取行数据，否则取列
     df['timestamp'] = df.apply(lambda x:get_timestamp(x[0]),axis=1)
+    # 计算SMA值
+    df['sma_green'] = df.apply(lambda x:sma(coreid,df,x[0], 3, 5),axis=1)
+    df['sma_red'] = df.apply(lambda x:sma(coreid,df,x[0], 5, 8),axis=1)
+    df['sma_blue'] = df.apply(lambda x:sma(coreid,df,x[0], 8, 13),axis=1)
+    # 计算移动平均值
+
+
+
     jarr = json.loads(df.to_json(orient='records'))
-    insert(coreid,jarr)
+    insert(coreid, jarr)
 
 
 """
