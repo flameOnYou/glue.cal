@@ -49,8 +49,8 @@ def insert(coreID,JsonArr):
         # 重复的不能插入
         if table.find({"timestamp":timestamps}).count() <= 0:
             json_arry.append(val)
-    print "insert:",json_arry
-    table.insert(json_arry)
+    if len(json_arry) > 0:
+        table.insert(json_arry)
 
 """
 日期Str转时间戳
