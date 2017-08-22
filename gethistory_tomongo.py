@@ -78,6 +78,10 @@ def sma(coreID,df,dateStr,n,m):
     return sysutils.sma(df,dateStr, n, m)
 
 
+"""
+在录入数据库的同时就计算出SMA的红线绿线和蓝线，然后需要比对的再做另外的统计
+"""
+
 def permit_to_mongo(coreid,filepath):
     df = pd.read_csv(filepath,encoding="gbk",skiprows =1,names=["datetime","coreId","name","close","high","low","open","before_close","Fluctuation","Chg","Turnover_rate","volume","amount","TotleMarket","CirculationMarket","volnum"])
     df = df.iloc[::-1]
